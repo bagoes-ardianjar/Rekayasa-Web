@@ -19,7 +19,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/read',[MahasiswaController::class,'read']);
-Route::post('/create',[MahasiswaController::class,'create']);
-Route::put('/update/{nim}', [MahasiswaController::class, 'update']);
-Route::delete('/delete/{nim}', [MahasiswaController::class, 'delete']);
+Route::get('/index', [MahasiswaController::class,'index']);
+Route::get('/read', [MahasiswaController::class,'read']);
+Route::post('/create', [MahasiswaController::class,'create']);
+Route::put('/mahasiswa/update', [MahasiswaController::class, 'update']);
+Route::delete('/mahasiswa/delete/{nim}', [MahasiswaController::class, 'destroy']);
+
+Route::post('/login', [MahasiswaController::class, 'login']);

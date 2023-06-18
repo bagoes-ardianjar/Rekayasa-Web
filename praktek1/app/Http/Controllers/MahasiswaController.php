@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Http\Controllers\MahasiswaController;
+// use App\Http\Controllers\MahasiswaController;
 
 use Illuminate\Http\Request;
 use App\Models\Mahasiswa;
@@ -9,17 +9,18 @@ use App\Models\Mahasiswa;
 class MahasiswaController extends Controller
 {
     public function index()
-    {
-        return view('index');
-    }
+{
+return view('index');
+}
 
     public function read()
     {
         $model=new Mahasiswa();
         $datax=$model->all();
-        foreach($datax as $dt) {
+        foreach($datax as $dt){
             $data[]=[
                 'nim'=>$dt->nim,
+                'nama'=>$dt->nama,
                 'umur'=>$dt->umur,
                 'alamat'=>$dt->alamat,
                 'kota'=>$dt->kota,
@@ -27,20 +28,20 @@ class MahasiswaController extends Controller
                 'jurusan'=>$dt->jurusan
             ];
         }
-        if (!empty($data)) {
+
+        if (!empty($data)){
             $success = true;
-            $message = "Data berhasil dibaca";
-        } else
-            {
-                $success=false;
-                $message="Data tidak ditemukan/kosong";
-            }
+            $massage = "Data berhasil dibaca";
+        }else{
+            $success = false;
+            $massage = "Data tidak ditemukan/kosong";
+        }
         $balikan = [
             "success"=>$success,
-            "message"=> $message,
+            "massage"=>$massage,
             "data"=> @$data
         ];
-        
+
         return response()->json($balikan);
     }
 
@@ -54,77 +55,64 @@ class MahasiswaController extends Controller
         $model->kota=$req->kota;
         $model->kelas=$req->kelas;
         $model->jurusan=$req->jurusan;
-        if($model->save()) {
+        if($model->save()){
             $success=true;
-            $message="Data berhasil disimpan";
-        } else {
+            $massage="Data berhasil disimpan";
+        }else{
             $success=false;
-            $message="Data gagal disimpan";
+            $massage="Data gagal disimpan";
         }
-        $balikan=[
+
+        $balikan = [
             "success"=>$success,
-            "message"=>$message,
+            "massage"=>$massage,
             "data"=> @$req->all()
         ];
+
         return response()->json($balikan);
     }
 
-    public function update(Request $req, $nim)
+    public function update(Request $request)
     {
-        $model = Mahasiswa::where('nim', $nim)->first();
-
-        if (!$model) {
-            $success = false;
-            $message = "Data tidak ditemukan";
-        } else {
-            $model->nama = $req->nama;
-            $model->umur = $req->umur;
-            $model->alamat = $req->alamat;
-            $model->kota = $req->kota;
-            $model->kelas = $req->kelas;
-            $model->jurusan = $req->jurusan;
-
-            if ($model->save()) {
-                $success = true;
-                $message = "Data berhasil diperbarui";
-            } else {
-                $success = false;
-                $message = "Data gagal diperbarui";
-            }
+        $nim = $request->nim;
+        //echo "$nim"; exit;
+        $mahasiswa = Mahasiswa::find($nim);
+        if (!$mahasiswa) {
+            return response()->json(['message' => 'Mahasiswa not found'], 404);
         }
 
-        $balikan = [
-            "success" => $success,
-            "message" => $message,
-            "data" => @$req->all()
-        ];
+        $request->validate([
+            'nama' => 'required',
+            'umur' => 'required|integer',
+            'alamat' => 'required',
+            'kota' => 'required',
+            'kelas' => 'required',
+            'jurusan' => 'required',
+        ]);
 
-        return response()->json($balikan);
+        $mahasiswa->update($request->all());
+
+        return response()->json(['message' => 'Mahasiswa updated successfully', 'mahasiswa' => $mahasiswa]);
+    }
+
+    public function destroy($nim)
+        {
+            $mahasiswa = Mahasiswa::find($nim);
+            if (!$mahasiswa) {
+                return response()->json(['message' => 'Mahasiswa not found'], 404);
+            }
+    
+            $mahasiswa->delete();
+    
+            return response()->json(['message' => 'Mahasiswa deleted successfully']);
     }
     
-    public function delete($nim)
+    public function login(Request $request)
     {
-        $model = Mahasiswa::where('nim', $nim)->first();
-
-        if (!$model) {
-            $success = false;
-            $message = "Data tidak ditemukan";
-        } else {
-            if ($model->delete()) {
-                $success = true;
-                $message = "Data berhasil dihapus";
-            } else {
-                $success = false;
-                $message = "Data gagal dihapus";
-            }
+        $credentials = $request->only('email', 'password');
+        if (Auth::attempt($credentials)) {
+            $token = $request->user()->createToken('token-name');
+            return response()->json(['access_token' => $token->plainTextToken,]);
         }
-
-        $balikan = [
-            "success" => $success,
-            "message" => $message
-        ];
-
-        return response()->json($balikan);
-    }
+        return response()->json(['message' => 'Invalid login credentials',], 401);}
 }
-
